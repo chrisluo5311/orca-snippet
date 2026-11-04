@@ -2,7 +2,7 @@
   "manifestVersion": 2,
   "id": "snippets",
   "name": "Snippets",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Save reusable commands and prompts, search them, and send them to a terminal or copy them in one click.",
   "license": "MIT",
   "repository": "https://github.com/chrisluo5311/orca-snippet",

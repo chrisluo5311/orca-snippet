@@ -32,7 +32,7 @@ Open **Settings → Plugins** in Orca, search for **Snippets**, and choose **Ins
 ### From the Git URL
 
 1. In Orca, open **Settings → Plugins → Add plugin → From a Git URL…**
-2. Paste `https://github.com/chrisluo5311/orca-snippet#v0.1.0` and choose **Install**.
+2. Paste `https://github.com/chrisluo5311/orca-snippet#v0.1.1` and choose **Install**.
 3. Review the requested access and enable the plugin.
 
 The panel then appears in the right sidebar.
