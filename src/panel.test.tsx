@@ -29,7 +29,7 @@ test('adds a snippet and runs it in the chosen terminal', async () => {
     [['Tests', 'npm test']]
   )
 
-  await view.select({ label: 'Send to' }, 't2')
+  await view.select({ label: 'Target terminal' }, 't2')
   await view.press({ text: 'Run' })
   assert.deepEqual(sent, [{ terminalId: 't2', text: 'npm test', enter: true }])
 

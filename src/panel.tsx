@@ -236,7 +236,7 @@ export default function Panel() {
 
       {termList.length > 0 ? (
         <Select
-          label="Send to"
+          label="Target terminal"
           value={active?.id ?? ''}
           options={termList.map((t, i) => ({ value: t.id, label: terminalLabel(t, i) }))}
           onChange={(id) => set(target, id)}
