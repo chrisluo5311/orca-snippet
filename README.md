@@ -4,6 +4,8 @@
 [![Version](https://img.shields.io/github/v/tag/chrisluo5311/orca-snippet?label=version)](https://github.com/chrisluo5311/orca-snippet/tags)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
+![Snippets for Orca](docs/images/cover.png)
+
 Save the commands and prompts you use every day, then run them in a terminal, insert them for editing, or copy them, all from Orca's right sidebar.
 
 <p align="center">

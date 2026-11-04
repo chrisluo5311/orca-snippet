@@ -6,6 +6,10 @@
   "description": "Save reusable commands and prompts, search them, and send them to a terminal or copy them in one click.",
   "license": "MIT",
   "repository": "https://github.com/chrisluo5311/orca-snippet",
+  "cover": {
+    "path": "docs/images/cover.png",
+    "alt": "The Snippets panel in Orca's sidebar, with buttons to run, insert, copy, edit and delete each snippet"
+  },
   "engines": {
     "orca": ">=1.4.247"
   },
