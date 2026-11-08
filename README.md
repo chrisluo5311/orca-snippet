@@ -86,13 +86,6 @@ src/*.test.ts(x)      Unit tests
 src/panel.check.ts    Render scenarios for `orca plugin check`
 ```
 
-### Releasing
-
-1. Bump `version` in `orca-plugin.json` and commit.
-2. Tag and push: `git tag -a v0.2.0 -m v0.2.0 && git push origin v0.2.0`.
-
-The [Orca plugin directory](https://www.onorca.dev/plugins) picks up new version tags automatically.
-
 ## Contributing
 
 Issues and pull requests are welcome. Please run `orca plugin test .` and `orca plugin validate .` before opening a pull request.
