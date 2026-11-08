@@ -18,7 +18,21 @@ const workspace = {
 export default defineCheck({
   'first run': { events: [workspace] },
   empty: { persisted: { plugin: { snippets: [] } } },
-  // Used for the README screenshots.
+  // The data of docs/images/src/panel.html, to compare that mock with Orca's own render:
+  // `orca plugin shot . --scenario readme --theme dark --width 326` (Orca window minimized).
+  readme: {
+    events: [workspace],
+    persisted: {
+      workspace: { target: 't2' },
+      plugin: {
+        snippets: [
+          { id: 's1', name: 'Run tests', body: 'pnpm test --watch=false' },
+          { id: 's2', name: 'Review prompt', body: 'Review the diff on this branch for bugs and missing tests.' },
+          { id: 's3', name: 'Git status', body: 'git status -sb' }
+        ]
+      }
+    }
+  },
   showcase: {
     events: [workspace],
     persisted: {

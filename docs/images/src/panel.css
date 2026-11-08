@@ -1,0 +1,48 @@
+/* The Snippets panel as Orca draws it (dark theme), for the README images. Colors sampled from
+   `orca plugin shot . --scenario readme --theme dark`. */
+.panel {
+  --bg: #171717;
+  --field: #212121;
+  --code: #222222;
+  --line: #2e2e2e;
+  --line-soft: #232323;
+  --text: #e5e5e5;
+  --muted: #a3a3a3;
+  --danger-bg: #301f1f;
+  --danger-line: #612f30;
+  --danger: #f05252;
+  width: 326px;
+  box-sizing: border-box;
+  padding: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  -webkit-font-smoothing: antialiased;
+}
+.panel * { box-sizing: border-box; }
+.panel svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+.head { display: flex; align-items: center; justify-content: space-between; height: 32px; }
+.head .title { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.badge { min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; background: #e4e4e4; color: #171717; font-size: 12px; font-weight: 600; display: grid; place-items: center; }
+.head .add { width: 28px; height: 28px; display: grid; place-items: center; color: var(--text); }
+.head .add svg { width: 18px; height: 18px; }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 13px; font-weight: 500; }
+.select, .search { height: 36px; border-radius: 8px; background: var(--field); border: 1px solid var(--line); padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; }
+.select svg { color: var(--muted); }
+.search { color: #8a8a8a; }
+
+.cards { display: flex; flex-direction: column; gap: 12px; }
+.card { border: 1px solid var(--line-soft); border-radius: 12px; padding: 20px 24px; display: flex; flex-direction: column; gap: 8px; }
+.card .name { font-size: 14px; font-weight: 600; }
+.code { background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font: 13px/1.5 'JetBrainsMono Nerd Font', 'JetBrains Mono', ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-word; }
+.actions { display: flex; gap: 4px; }
+.btn { height: 32px; min-width: 32px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; color: var(--text); }
+.btn.solid { padding: 0 12px 0 10px; background: var(--field); border: 1px solid var(--line); font-size: 14px; font-weight: 500; }
+.btn.outline { border: 1px solid var(--line); }
+.btn.danger { color: var(--danger); background: var(--danger-bg); border: 1px solid var(--danger-line); }
