@@ -20,13 +20,23 @@ import {
   Text,
   Textarea,
   update,
+  type IconName,
   type PanelContext
 } from 'orca'
 
 export type Snippet = { id: string; name: string; body: string }
 type Terminal = { id: string; title?: string }
 type Draft = { id: string | null; name: string; body: string }
-type Notice = { tone: 'success' | 'danger'; text: string }
+type Notice = { tone: 'success' | 'warning' | 'danger'; title: string; text: string }
+
+const NOTICE_ICON: Record<Notice['tone'], IconName> = {
+  success: 'check',
+  warning: 'warning',
+  danger: 'warning'
+}
+/** How long a notice stays up, and how long an unconfirmed delete stays armed. */
+const NOTICE_MS = 2500
+const CONFIRM_DELETE_MS = 4000
 
 const EXAMPLES: Snippet[] = [
   { id: 'example-1', name: 'Git status', body: 'git status -sb' },
@@ -45,10 +55,16 @@ const pendingDelete = atom<string | null>(null)
 const notice = atom<Notice | null>(null)
 
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
-function flash(tone: Notice['tone'], text: string): void {
-  set(notice, { tone, text })
+function flash(tone: Notice['tone'], title: string, text: string): void {
+  set(notice, { tone, title, text })
   clearTimeout(noticeTimer)
-  noticeTimer = setTimeout(() => set(notice, null), 2500)
+  noticeTimer = setTimeout(() => set(notice, null), NOTICE_MS)
+}
+
+let deleteTimer: ReturnType<typeof setTimeout> | undefined
+function disarmDelete(): void {
+  clearTimeout(deleteTimer)
+  set(pendingDelete, null)
 }
 
 function newId(): string {
@@ -68,7 +84,7 @@ function terminalLabel(t: Terminal, index: number): string {
 async function send(snippet: Snippet, enter: boolean): Promise<void> {
   const terminal = activeTerminal()
   if (!terminal) {
-    flash('danger', 'Open a terminal in this workspace first.')
+    flash('warning', 'No terminal', 'Open a terminal in this workspace first.')
     return
   }
   try {
@@ -77,20 +93,20 @@ async function send(snippet: Snippet, enter: boolean): Promise<void> {
       text: snippet.body,
       enter
     })
-    if (accepted) flash('success', `${enter ? 'Ran' : 'Inserted'} "${snippet.name}"`)
-    else flash('danger', 'The terminal did not accept the text.')
+    if (accepted) flash('success', enter ? 'Ran' : 'Inserted', snippet.name)
+    else flash('danger', 'Not sent', 'The terminal did not accept the text.')
   } catch (error) {
-    flash('danger', `Could not send: ${(error as Error).message}`)
+    flash('danger', 'Could not send', (error as Error).message)
   }
 }
 
 async function copy(snippet: Snippet): Promise<void> {
   try {
     const { copied } = await plugin.request('snippet.copy', { text: snippet.body })
-    if (copied) flash('success', `Copied "${snippet.name}"`)
-    else flash('danger', 'No clipboard command is available on this system.')
+    if (copied) flash('success', 'Copied', snippet.name)
+    else flash('danger', 'Could not copy', 'No clipboard command is available on this system.')
   } catch (error) {
-    flash('danger', `Could not copy: ${(error as Error).message}`)
+    flash('danger', 'Could not copy', (error as Error).message)
   }
 }
 
@@ -99,21 +115,27 @@ function saveDraft(): void {
   if (!d) return
   const name = d.name.trim()
   if (!name || !d.body.trim()) return
-  if (d.id === null) {
+  const exists = d.id !== null && read(snippets).some((s) => s.id === d.id)
+  if (!exists) {
+    // A new snippet, or one deleted while it was being edited: keep the text rather than drop it.
     update(snippets, (list) => [{ id: newId(), name, body: d.body }, ...list])
+    if (d.id !== null) flash('warning', 'Saved as new', 'That snippet was deleted while you edited it.')
   } else {
     update(snippets, (list) => list.map((s) => (s.id === d.id ? { ...s, name, body: d.body } : s)))
   }
   set(draft, null)
 }
 
+/** First press arms the delete; a second press within CONFIRM_DELETE_MS deletes. */
 function remove(id: string): void {
   if (read(pendingDelete) !== id) {
     set(pendingDelete, id)
+    clearTimeout(deleteTimer)
+    deleteTimer = setTimeout(disarmDelete, CONFIRM_DELETE_MS)
     return
   }
   update(snippets, (list) => list.filter((s) => s.id !== id))
-  set(pendingDelete, null)
+  disarmDelete()
 }
 
 export function matches(snippet: Snippet, q: string): boolean {
@@ -128,7 +150,9 @@ export function matches(snippet: Snippet, q: string): boolean {
 export function setup(ctx: PanelContext): void {
   // Fires right away with the current workspace, then on every focus or terminal change.
   ctx.subscriptions.push(
-    on('workspace.changed', ({ context }) => set(terminals, context?.terminals ?? []))
+    on('workspace.changed', ({ context }) => set(terminals, context?.terminals ?? [])),
+    // Timers must not fire into a panel that has closed.
+    { dispose: () => (clearTimeout(noticeTimer), clearTimeout(deleteTimer)) }
   )
 }
 
@@ -168,8 +192,9 @@ function Editor({ value }: { value: Draft }) {
 function SnippetCard({ snippet }: { snippet: Snippet }) {
   const confirming = read(pendingDelete) === snippet.id
   return (
-    <Card title={snippet.name}>
+    <Card>
       <Stack gap="xs">
+        <Text weight="semibold">{snippet.name}</Text>
         <CodeView code={snippet.body} wrap maxHeight="sm" />
         <Row gap="xs" wrap>
             <Button size="sm" icon="play" tooltip="Type it and press Enter" onPress={() => send(snippet, true)}>
@@ -247,7 +272,11 @@ export default function Panel() {
         </Text>
       )}
 
-      {message ? <Callout tone={message.tone}>{message.text}</Callout> : null}
+      {message ? (
+        <Callout tone={message.tone} icon={NOTICE_ICON[message.tone]} title={message.title}>
+          {message.text}
+        </Callout>
+      ) : null}
 
       {form ? <Editor value={form} /> : null}
 

@@ -1,4 +1,5 @@
 // `orca plugin test .` runs this in Node with the same runtime Orca uses.
+import { mock } from 'node:test'
 import { assert, mockHost, mount, test } from 'orca/testing'
 import * as panel from './panel'
 
@@ -37,7 +38,10 @@ test('adds a snippet and runs it in the chosen terminal', async () => {
   assert.deepEqual(sent[1], { terminalId: 't2', text: 'npm test', enter: false })
 
   await view.press({ label: 'Copy' })
-  assert.ok(view.find({ text: 'Copied "Tests"' }))
+  const copied = view.find({ type: 'Callout' })
+  assert.equal(copied?.props?.title, 'Copied')
+  assert.equal(copied?.props?.tone, 'success')
+  assert.ok(view.find({ type: 'Callout', text: /Tests/ }))
   assert.deepEqual(view.errors, [])
   assert.deepEqual(view.refusals, [])
   await view.unmount()
@@ -64,7 +68,11 @@ test('searches, edits and deletes with confirmation', async () => {
   await view.press(view.findAll({ label: 'Edit' })[1])
   await view.type({ label: 'Name' }, 'Build all', { replace: true })
   await view.press({ text: 'Save' })
-  assert.ok(view.find({ label: 'Build all' }))
+  assert.deepEqual(
+    (view.persisted.plugin.snippets as panel.Snippet[]).map((s) => [s.id, s.name]),
+    [['a', 'Git status'], ['b', 'Build all']]
+  )
+  assert.equal(view.find({ label: 'Name' }), null)
 
   await view.press(view.findAll({ label: 'Delete' })[0])
   assert.equal((view.persisted.plugin.snippets as unknown[]).length, 2)
@@ -81,6 +89,49 @@ test('warns when the workspace has no terminal', async () => {
   const view = await mount(panel, { host: mockHost() })
   await view.emit('workspace.changed', { context: null })
   await view.press(view.findAll({ text: 'Run' })[0])
-  assert.ok(view.find({ text: 'Open a terminal in this workspace first.' }))
+  const warning = view.find({ type: 'Callout' })
+  assert.equal(warning?.props?.tone, 'warning')
+  assert.equal(warning?.props?.title, 'No terminal')
+  assert.ok(view.find({ type: 'Callout', text: /Open a terminal in this workspace first\./ }))
   await view.unmount()
+})
+
+test('keeps an edit whose snippet was deleted meanwhile, as a new snippet', async () => {
+  const view = await mount(panel, {
+    host: mockHost(),
+    persisted: { plugin: { snippets: [{ id: 'a', name: 'Build', body: 'pnpm build' }] } }
+  })
+  await view.press({ label: 'Edit' })
+  await view.type({ label: 'Content' }, 'pnpm build --prod', { replace: true })
+  await view.press({ label: 'Delete' })
+  await view.press({ text: 'Confirm' })
+  assert.deepEqual(view.persisted.plugin.snippets, [])
+
+  await view.press({ text: 'Save' })
+  const saved = view.persisted.plugin.snippets as panel.Snippet[]
+  assert.deepEqual(saved.map((s) => [s.name, s.body]), [['Build', 'pnpm build --prod']])
+  assert.notEqual(saved[0].id, 'a')
+  assert.equal(view.find({ type: 'Callout' })?.props?.title, 'Saved as new')
+  await view.unmount()
+})
+
+test('an unconfirmed delete disarms by itself', async () => {
+  mock.timers.enable({ apis: ['setTimeout'] })
+  try {
+    const view = await mount(panel, {
+      host: mockHost(),
+      persisted: { plugin: { snippets: [{ id: 'a', name: 'Build', body: 'pnpm build' }] } }
+    })
+    await view.press({ label: 'Delete' })
+    assert.ok(view.find({ text: 'Confirm' }))
+    mock.timers.tick(4000)
+    // The test view redraws after an act, not after a bare timer.
+    await view.type({ label: 'Search' }, '', { replace: true })
+    assert.equal(view.find({ text: 'Confirm' }), null)
+    assert.ok(view.find({ label: 'Delete' }))
+    assert.equal((view.persisted.plugin.snippets as unknown[]).length, 1)
+    await view.unmount()
+  } finally {
+    mock.timers.reset()
+  }
 })
