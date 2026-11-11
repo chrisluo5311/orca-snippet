@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- docs/images/cover.png (1600×1000: 800×500 CSS at 2x). Render: see docs/images/src/render.sh -->
+<!-- docs/images/cover.png (1600×1000: 800×500 CSS, rendered at 4x and scaled down to 2x). Render: docs/images/src/render.sh -->
 <html>
 <head>
 <meta charset="utf-8">
@@ -22,7 +22,8 @@
   ul { list-style: none; margin: 34px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
   li { position: relative; padding-left: 18px; font-size: 15px; color: #e6e9ef; }
   li::before { content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: #5b9cf6; }
-  .stage { position: absolute; right: 64px; top: 50%; transform: translateY(-50%); perspective: 1400px; }
+  /* Nudged up 6px: the tilt leaves the panel sitting low, and the bottom margin must fit its shadow. */
+  .stage { position: absolute; right: 64px; top: 50%; transform: translateY(calc(-50% - 6px)); perspective: 1400px; }
   /* A soft blue glow under the panel, so it reads as lifted off the background. */
   .stage::before {
     content: ''; position: absolute; inset: 12% -6% -4% 10%;
@@ -35,12 +36,18 @@
     zoom: 0.8;
     transform: rotateY(-10deg) rotateX(5deg) rotateZ(1deg);
     transform-origin: 40% 50%;
+    /* The tilt brings the right edge forward, so the card's edge and its shadow fall right and down,
+       the same way as the glow. The soft shadows stay inside the canvas so none is cut off. */
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.08),
-      -2px 2px 0 #0d0f14,
-      -6px 8px 0 rgba(8, 10, 16, 0.6),
-      -18px 30px 40px rgba(0, 0, 0, 0.45),
-      -40px 70px 90px rgba(0, 0, 0, 0.5);
+      2px 2px 0 #0d0f14,
+      6px 8px 0 rgba(8, 10, 16, 0.6),
+      12px 18px 28px rgba(0, 0, 0, 0.45),
+      30px 30px 60px -18px rgba(0, 0, 0, 0.5);
+  }
+  /* A lit top edge, drawn over the panel (an inset shadow on .frame would sit under it). */
+  .frame::after {
+    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 </style>
 </head>
